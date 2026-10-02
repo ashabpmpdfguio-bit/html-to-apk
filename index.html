@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تبدیل وب‌سایت به APK</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6fa;color:#172033;font-family:Tahoma,Arial,sans-serif}
+main{max-width:620px;margin:auto;padding:22px 14px 50px}.brand{text-align:center;padding:14px 0 20px}.logo{width:58px;height:58px;margin:auto;border-radius:18px;background:#111827;color:#fff;display:grid;place-items:center;font-size:25px;font-weight:bold}.brand h1{font-size:24px;margin:12px 0 5px}.brand p{color:#667085;font-size:13px;margin:0}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:22px;padding:18px;box-shadow:0 12px 35px rgba(16,24,40,.07)}
+.statusline{text-align:center;font-size:12px;margin:0 0 15px;color:#667085}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;margin-left:5px}
+.step{font-size:13px;font-weight:bold;color:#667085;margin:2px 0 9px}.drop{border:2px dashed #c5ccda;border-radius:17px;padding:28px 14px;text-align:center;cursor:pointer}.drop.active{border-color:#4f46e5;background:#f5f3ff}.drop b{display:block;font-size:17px;margin-bottom:7px}.hint{font-size:12px;color:#7b8495}.chosen{margin-top:10px;font-size:12px;color:#344054}
+input[type=file]{display:none}label{display:block;font-size:13px;font-weight:bold;margin:18px 0 7px}input[type=text]{width:100%;padding:13px;border:1px solid #d7dce5;border-radius:12px;font-size:15px;outline:0}input[type=text]:focus{border-color:#6366f1}
+.iconrow{display:flex;align-items:center;gap:12px}.preview{width:62px;height:62px;border-radius:16px;display:none;object-fit:cover;background:#eef1f6}.secondary{background:#eef2ff;color:#3730a3;border:0;border-radius:11px;padding:11px 14px;font-weight:bold}
+.primary{width:100%;margin-top:21px;padding:15px;border:0;border-radius:13px;background:#111827;color:#fff;font-weight:bold;font-size:16px}.primary:disabled{opacity:.45}
+.progress{display:none;margin-top:20px}.bar{height:9px;background:#e9edf3;border-radius:99px;overflow:hidden}.fill{height:100%;width:0;background:#4f46e5;transition:width .35s}.msg{text-align:center;font-size:13px;color:#475467;margin:10px}
+.result{display:none;text-align:center;padding:18px 4px}.check{font-size:40px;color:#16a34a}.download{display:inline-block;margin-top:10px;background:#16a34a;color:#fff;text-decoration:none;padding:13px 20px;border-radius:12px;font-weight:bold}.error{color:#b42318;background:#fff1f0;border-radius:12px;padding:12px;font-size:12px;display:none;margin-top:15px;white-space:pre-wrap;line-height:1.8}
+.notice{display:none;color:#9a3412;background:#fff7ed;border-radius:12px;padding:12px;font-size:12px;line-height:1.8;margin-bottom:14px}
+</style></head>
+<body><main>
+<div class="brand"><div class="logo">APK</div><h1>تبدیل وب‌سایت به APK</h1><p>فقط فایل را بده؛ بقیه کار خودکار انجام می‌شود.</p></div>
+<div class="card">
+<div id="server" class="statusline"><span class="dot"></span>اتصال به سرویس ساخت برقرار است</div>
+<div id="notice" class="notice"></div>
+<div class="step">۱. فایل وب‌سایت</div>
+<div id="drop" class="drop"><b>فایل HTML یا ZIP را انتخاب کنید</b><span class="hint">پروژه‌های چندفایلی را به‌صورت ZIP بفرستید</span><div id="chosen" class="chosen"></div><input id="web" type="file" accept=".html,.htm,.xhtml,.zip"></div>
+<label>۲. نام برنامه</label><input id="name" maxlength="40" value="برنامه من" placeholder="نام برنامه">
+<label>۳. عکس برنامه (اختیاری)</label><div class="iconrow"><img id="preview" class="preview"><button id="pick" class="secondary">انتخاب عکس</button><input id="icon" type="file" accept="image/png,image/jpeg,image/webp"><span class="hint">PNG / JPG / WebP</span></div>
+<button id="go" class="primary" disabled>ساخت APK</button>
+<div id="progress" class="progress"><div class="bar"><div id="fill" class="fill"></div></div><div id="msg" class="msg">در حال آماده‌سازی…</div></div>
+<div id="err" class="error"></div>
+<div id="result" class="result"><div class="check">✓</div><b>APK آماده شد</b><br><a id="download" class="download">دانلود APK</a></div>
+</div></main>
+<script>
+const $=x=>document.getElementById(x),state={file:null,server:false};
+async function health(){
+ try{let r=await fetch("/api/health",{cache:"no-store"});if(!r.ok)throw 0;let j=await r.json();state.server=!!j.ok;
+   $("server").innerHTML='<span class="dot"></span>اتصال به سرویس ساخت برقرار است';
+ }catch(e){state.server=false;$("server").innerHTML="⚠️ سرویس ساخت در دسترس نیست";
+   $("notice").style.display="block";$("notice").textContent="این صفحه باید از طریق سرور Node.js اجرا شود؛ اگر فایل index.html را مستقیم باز کرده‌اید یا فقط روی یک هاست استاتیک قرار داده‌اید، ساخت APK کار نمی‌کند. پروژه را با npm start اجرا کنید و همین آدرس را باز کنید.";
+ }
+ $("go").disabled=!(state.file&&state.server);
+}
+health();
+$("drop").onclick=()=> $("web").click();
+$("drop").ondragover=e=>{e.preventDefault();$("drop").classList.add("active")};
+$("drop").ondragleave=()=>$("drop").classList.remove("active");
+$("drop").ondrop=e=>{e.preventDefault();$("drop").classList.remove("active");if(e.dataTransfer.files[0]){state.file=e.dataTransfer.files[0];render()}};
+$("web").onchange=e=>{state.file=e.target.files[0];render()};
+function render(){$("chosen").textContent=state.file?"✓ "+state.file.name:"";$("go").disabled=!(state.file&&state.server)}
+$("pick").onclick=()=>$("icon").click();
+$("icon").onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{$("preview").src=r.result;$("preview").style.display="block"};r.readAsDataURL(f)};
+$("go").onclick=async()=>{
+ $("go").disabled=true;$("progress").style.display="block";$("result").style.display="none";$("err").style.display="none";$("fill").style.width="5%";$("msg").textContent="در حال ارسال فایل…";
+ try{
+   let fd=new FormData();fd.append("webfile",state.file);fd.append("appName",$("name").value||"برنامه من");if($("icon").files[0])fd.append("icon",$("icon").files[0]);
+   let r;try{r=await fetch("/api/build",{method:"POST",body:fd});}catch(e){throw Error("ارتباط با سرور قطع شد. مطمئن شوید برنامه با npm start اجرا شده است.")}
+   let j=await r.json().catch(()=>({}));
+   if(!r.ok)throw Error(j.error||"سرور درخواست را نپذیرفت.");
+   await poll(j.id);
+ }catch(e){fail(e.message)}
+};
+async function poll(id){
+ try{
+  let r=await fetch("/api/status/"+id,{cache:"no-store"});let j=await r.json();
+  if(!r.ok)throw Error(j.error||"وضعیت ساخت قابل دریافت نیست.");
+  $("fill").style.width=(j.progress||0)+"%";$("msg").textContent=j.message||"در حال ساخت…";
+  if(j.state==="done"){$("result").style.display="block";$("download").href="/api/download/"+id;$("progress").style.display="none";$("go").disabled=false;return}
+  if(j.state==="error"){fail(j.error||j.message);return}
+  setTimeout(()=>poll(id),1000);
+ }catch(e){fail("ارتباط با سرور هنگام ساخت قطع شد:\n"+e.message)}
+}
+function fail(x){$("progress").style.display="none";$("err").style.display="block";$("err").textContent=x;$("go").disabled=!(state.file&&state.server)}
+</script></body></html>
